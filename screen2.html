@@ -1,0 +1,341 @@
+<!-- Hero Section -->
+<div class="relative h-screen bg-black">
+    <video autoplay loop muted playsinline class="absolute inset-0 w-full h-full object-cover"></video>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wedding Invitation</title>
+    <link rel="stylesheet" href="src/output.css">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Quicksand:wght@400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        .font-script {
+            font-family: 'Great Vibes', cursive;
+        }
+
+        @keyframes bounceY {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .animate-bounce-y {
+            animation: bounceY 1s infinite;
+        }
+
+        @keyframes fadeUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-up {
+            animation: fadeUp 1s ease-out forwards;
+        }
+
+        /* Fade-in animation for loading/main content */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .fade-in.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+    <style>
+        .char {
+            display: inline-block;
+            transform: translateY(1rem);
+            opacity: 0;
+            animation: fadeUp 0.6s forwards;
+        }
+
+        /* Use the same fadeUp keyframes as above for consistency */
+        /* Efek ketika hover – mulai looping naik-turun */
+        #animated-text:hover .char {
+            animation: floatLoop 1.2s ease-in-out infinite;
+        }
+
+        @keyframes floatLoop {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+
+        body.loading {
+            background-color: #2f95a1;
+            /* sama dengan warna loading screen: bg-amber-200 */
+            overflow: hidden;
+        }
+    </style>
+
+</head>
+
+<body class="bg-white text-gray-800 loading">
+
+
+    <!-- LOADING SCREEN -->
+    <div id="loadingScreen"
+        class="fixed inset-0 flex items-center justify-center bg-amber-200 z-50 transition-opacity duration-900 opacity-100 document.body.classList.remove('loading');">
+        <img src="img/1.png"
+            alt="Pink hand-drawn heart bouncing playfully with small accent marks above it, set against a plain background. The scene feels cheerful and lighthearted."
+            class="w-11 h-19 animate-bounce-y" style="animation-delay: 0.2s;" />
+        <img src="img/1.png"
+            alt="Larger pink hand-drawn heart bouncing with joyful motion, surrounded by accent marks, on a simple background. The mood is uplifting and whimsical."
+            class="w-16 h-24 animate-bounce-y" style="animation-delay: 0.4s;" />
+        <img src="img/1.png"
+            alt="Pink hand-drawn heart gently bouncing with playful accent marks above, set on a plain background. The feeling is warm and happy."
+            class="w-11 h-19 animate-bounce-y" style="animation-delay: 0.6s;" />
+        
+        </div>
+
+
+    <script>
+        window.addEventListener('load', () => {
+            const loading = document.getElementById('loadingScreen');
+            const mainContent = document.getElementById('mainContent');
+
+            setTimeout(() => {
+                loading.classList.remove('opacity-100');
+                loading.classList.add('opacity-0');
+
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                    mainContent.classList.remove('hidden');
+                    mainContent.classList.add('show'); // trigger fade-in
+                }, 400); // waktu sama dengan transition loadingScreen
+            }, 2000); // delay tampil loading screen
+        });
+    </script>
+
+
+    <!-- MAIN CONTENT -->
+    <div id="mainContent" class="hidden fade-in">
+
+
+        <!-- Hero Section -->
+        <div class="relative h-screen bg-black">
+            <video autoplay loop muted playsinline class="absolute inset-0 w-full h-full object-cover">
+                <source src="vid/5.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+
+            <!-- Overlay -->
+            <div class="absolute inset-0 bg-black opacity-40"></div>
+
+            <!-- Floating animated flower images (fade up from bottom, disappear at top) -->
+            <style>
+                .floating-flower-up {
+                    position: absolute;
+                    bottom: -60px;
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 9999px;
+                    overflow: hidden;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                    opacity: 0;
+                    animation: flowerFadeUp 7s linear infinite;
+                    pointer-events: none;
+                }
+
+                @keyframes flowerFadeUp {
+                    0% {
+                        transform: translateY(0) scale(1);
+                        opacity: 0;
+                    }
+
+                    10% {
+                        opacity: 1;
+                    }
+
+                    80% {
+                        opacity: 1;
+                        transform: translateY(-80vh) scale(1.08);
+                    }
+
+                    100% {
+                        opacity: 0;
+                        transform: translateY(-100vh) scale(1.12);
+                    }
+                }
+            </style>
+            <script>
+                // Generate continuous randomized floating flowers, ensuring no overlap
+                const flowerCount = 22;
+                const minDistance = 60; // px, minimum horizontal distance between flowers
+                const minDelayDistance = 1.2; // s, minimum animation delay difference to avoid vertical overlap
+                const heroSection = document.currentScript.parentElement;
+                const usedFlowers = [];
+
+                function randomBetween(a, b) {
+                    return Math.random() * (b - a) + a;
+                }
+
+                function isOverlapping(newFlower) {
+                    return usedFlowers.some(flower => {
+                        // Check horizontal overlap
+                        if (Math.abs(flower.leftPx - newFlower.leftPx) < minDistance) {
+                            // Check vertical overlap (animation delay)
+                            if (Math.abs(flower.delay - newFlower.delay) < minDelayDistance) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+                }
+
+                for (let i = 0; i < flowerCount; i++) {
+                    let tries = 0, maxTries = 80;
+                    let left, leftPx, delay, width;
+                    do {
+                        width = randomBetween(36, 54);
+                        left = randomBetween(2, 95); // percent
+                        leftPx = left / 100 * window.innerWidth;
+                        delay = randomBetween(0, 7);
+                        tries++;
+                    } while (
+                        isOverlapping({ leftPx, delay }) && tries < maxTries
+                    );
+                    usedFlowers.push({ leftPx, delay });
+
+                    const img = document.createElement('img');
+                    img.src = "img/bunga.png";
+                    img.alt = "flower";
+                    img.className = "floating-flower-up";
+                    img.style.width = `${width}px`;
+                    img.style.height = img.style.width;
+                    img.style.left = `${left}%`;
+                    img.style.animationDelay = `${delay}s`;
+                    heroSection.appendChild(img);
+                }
+            </script>
+
+            <!-- Navigation -->
+            <nav class="absolute top-0 left-0 w-full px-8 py-4 flex items-center justify-between text-white z-10"></nav>
+            <div class="text-2xl italic flex items-center gap-2 animate-fade-up opacity-0"
+                style="animation-delay: 0.9s;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="16" fill="currentColor" class="bi bi-send"
+                    viewBox="0 0 16 16">
+                    <path
+                        d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z" />
+                </svg>
+                alhanief.creative
+            </div>
+
+
+            <!-- Hero Content -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-4 z-10">
+
+                <p id="animated-text" class="text-lg mb-2 font-medium">Save the date for the wedding of 22 June 2025</p>
+                <div class="text-white text-center mt-2 opacity-0 animate-fade-up delay-1000">
+                    <h1 id="animated-names" class="text-5xl md:text-7xl font-script mb-6">AlGhifari & Yusfina</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="undangan.html"
+                        class="bg-amber-200 text-black px-6 py-2 text-sm uppercase font-semibold hover:bg-white transition rounded animate-fade-up opacity-0"
+                        style="animation-delay: 1.5s;">Buka
+                        Undangan</a>
+                    <!-- Play/Pause YouTube Backsound Button -->
+                    
+            </div>
+
+            <!-- Carousel Buttons -->
+            <!-- Floating animated flower images at the BOTTOM -->
+            <style>
+                .floating-flower {
+                    position: absolute;
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 9999px;
+                    overflow: hidden;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                    animation: floatUp 4s ease-in-out infinite;
+                }
+
+                @keyframes floatUp {
+                    0% {
+                        transform: translateY(0) scale(1);
+                        opacity: 0.7;
+                    }
+
+                    50% {
+                        transform: translateY(-40px) scale(1.08);
+                        opacity: 1;
+                    }
+
+                    100% {
+                        transform: translateY(0) scale(1);
+                        opacity: 0.7;
+                    }
+                }
+            </style>
+           
+        </script>
+    </div>
+    <script>
+        // Animated text for "Save the date..."
+        const el = document.getElementById("animated-text");
+        const text = el.innerText;
+        el.innerText = "";
+
+        [...text].forEach((char, i) => {
+            const span = document.createElement("span");
+            span.className = "char";
+            span.style.animationDelay = `${i * 0.05}s`;
+
+            // Tangani spasi agar tidak hilang tampilannya
+            if (char === " ") {
+                span.innerHTML = "&nbsp;";
+            } else {
+                span.textContent = char;
+            }
+
+            el.appendChild(span);
+        });
+
+        // Animated text for "Gifary & Yusfina"
+        const namesEl = document.getElementById("animated-names");
+        if (namesEl) {
+            const namesText = namesEl.innerText;
+            namesEl.innerText = "";
+            [...namesText].forEach((char, i) => {
+                const span = document.createElement("span");
+                span.className = "char";
+                span.style.animationDelay = `${i * 0.05}s`;
+                if (char === " ") {
+                    span.innerHTML = "&nbsp;";
+                } else {
+                    span.textContent = char;
+                }
+                namesEl.appendChild(span);
+            });
+        }
+    </script>
+
+
+</html>
