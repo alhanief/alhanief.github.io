@@ -274,7 +274,7 @@
       <div class="bg-white shadow-lg p-6 rounded-md text-center flex flex-col items-center order-1 fade-in"
         data-aos="fade-right" data-aos-delay="100">
         <div
-          class="w-25 h-25 rounded-full overflow-hidden mx-auto mb-4 border-4 border-pink-200 flex items-center justify-center">
+          class="w-25 h-25 rounded-full overflow-hidden mx-auto mb-6  border-4 border-pink-200 flex items-center justify-center">
           <img src="img/Algy.png" alt="Bride" class="object-cover w-full h-full">
         </div>
         <h2 class="text-2xl font-semibold mb-2">Abu Dzar Al Ghifari</h2>
@@ -578,545 +578,549 @@
     });
   </script>
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbwX9qu2fY7LQXg0brHcRTmsPa6s2lVSphkjFzGjSJ0WhDw7OdnvIPgLYvkZYRjfgxhX/exec";
-
     document.addEventListener("DOMContentLoaded", function () {
+      // Inisialisasi semua elemen
       const form = document.getElementById("guestForm");
       const messageList = document.getElementById("messageList");
+      const messageCarousel = document.getElementById('messageCarousel');
+      const scrollLeftBtn = document.getElementById('scrollLeft');
+      const scrollRightBtn = document.getElementById('scrollRight');
+      const loading = document.getElementById('loadingScreen');
+      const mainContent = document.getElementById('mainContent');
 
-      if (!form || !messageList) {
-        console.error("Form atau messageList tidak ditemukan di halaman.");
-        return;
-      }
-
-      // Panggil fetch saat halaman siap
-      fetchMessages();
-
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-
-        const name = form.name.value.trim();
-        const address = form.address.value.trim();
-        const message = form.message.value.trim();
-
-        if (!name || !address || !message) {
-          alert("Harap isi semua kolom!");
-          return;
-        }
-
-        const submitBtn = form.querySelector('button[type="submit"]');
-        submitBtn.textContent = "Mengirim...";
-        submitBtn.disabled = true;
-
-        const formData = new FormData();
-        formData.append("name", name);
-        formData.append("address", address);
-        formData.append("message", message);
-
-        fetch(scriptURL, {
-          method: "POST",
-          body: formData
-        })
-          .then(() => {
-            form.reset();
-            fetchMessages(); // Refresh pesan
-          })
-          .catch(error => {
-            console.error("Gagal kirim:", error);
-            alert("Gagal kirim pesan.");
-          })
-          .finally(() => {
-            submitBtn.textContent = "Kirim";
-            submitBtn.disabled = false;
-          });
-      });
-
+      // Fungsi untuk menampilkan pesan dari Google Sheets
       function fetchMessages() {
         fetch(scriptURL)
           .then(res => res.json())
           .then(data => {
-            messageList.innerHTML = ""; // Clear
-
-            data.forEach(item => {
-              const { name, address, message, timestamp } = item;
-
-              const div = document.createElement("div");
-              div.className = "bg-[#222] text-white p-4 rounded shadow text-sm border border-[#333]";
-              div.innerHTML = `
-              <p class="font-bold">${name}</p>
-              <p class="text-gray-400 text-xs">${address}</p>
-              <p class="mt-2 italic">"${message}"</p>
-              <p class="text-gray-500 text-xs mt-2">${new Date(timestamp).toLocaleString()}</p>
-            `;
-              messageList.appendChild(div);
-            });
+            if (messageList) {
+              messageList.innerHTML = "";
+              data.forEach(item => {
+                const { name, address, message, timestamp } = item;
+                const div = document.createElement("div");
+                div.className = "bg-[#222] text-white p-4 rounded shadow text-sm border border-[#333]";
+                div.innerHTML = `
+                <p class="font-bold">${name}</p>
+                <p class="text-gray-400 text-xs">${address}</p>
+                <p class="mt-2 italic">"${message}"</p>
+                <p class="text-gray-500 text-xs mt-2">${new Date(timestamp).toLocaleString()}</p>
+              `;
+                messageList.appendChild(div);
+              });
+            }
           })
           .catch(err => {
             console.error("Fetch error:", err);
-            messageList.innerHTML = `<p class="text-red-500">Gagal memuat pesan.</p>`;
+            if (messageList) {
+              messageList.innerHTML = `<p class="text-red-500">Gagal memuat pesan.</p>`;
+            }
           });
       }
+
+      // Fungsi untuk carousel pesan dari localStorage
+      function setupMessageCarousel() {
+        if (!messageCarousel) return;
+
+        let currentMessageIndex = 0;
+        let messages = JSON.parse(localStorage.getItem('guestMessages')) || [];
+
+        const showCurrentMessage = () => {
+          messageCarousel.innerHTML = '';
+          if (messages.length > 0) {
+            const data = messages[currentMessageIndex];
+            const msgItem = document.createElement('div');
+            msgItem.className = 'inline-block';
+            msgItem.style.whiteSpace = 'pre-line';
+            msgItem.textContent = `"${data.message}" — ${data.name} from ${data.address}`;
+            messageCarousel.appendChild(msgItem);
+          }
+        };
+
+        if (scrollLeftBtn) {
+          scrollLeftBtn.addEventListener('click', () => {
+            if (messages.length === 0) return;
+            currentMessageIndex = (currentMessageIndex - 1 + messages.length) % messages.length;
+            showCurrentMessage();
+          });
+        }
+
+        if (scrollRightBtn) {
+          scrollRightBtn.addEventListener('click', () => {
+            if (messages.length === 0) return;
+            currentMessageIndex = (currentMessageIndex + 1) % messages.length;
+            showCurrentMessage();
+          });
+        }
+
+        showCurrentMessage();
+      }
+
+      // Handle form submission
+      if (form) {
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const name = form.name.value.trim();
+          const address = form.address.value.trim();
+          const message = form.message.value.trim();
+
+          if (!name || !address || !message) {
+            alert("Harap isi semua kolom!");
+            return;
+          }
+
+          const submitBtn = form.querySelector('button[type="submit"]');
+          if (submitBtn) {
+            submitBtn.textContent = "Mengirim...";
+            submitBtn.disabled = true;
+          }
+
+          const formData = new FormData();
+          formData.append("name", name);
+          formData.append("address", address);
+          formData.append("message", message);
+
+          fetch(scriptURL, {
+            method: "POST",
+            body: formData
+          })
+            .then(() => {
+              form.reset();
+              fetchMessages();
+            })
+            .catch(error => {
+              console.error("Gagal kirim:", error);
+              alert("Gagal kirim pesan.");
+            })
+            .finally(() => {
+              if (submitBtn) {
+                submitBtn.textContent = "Kirim";
+                submitBtn.disabled = false;
+              }
+            });
+        });
+      }
+
+      // Loading screen transition
+      if (loading && mainContent) {
+        setTimeout(() => {
+          loading.classList.remove('opacity-100');
+          loading.classList.add('opacity-0');
+
+          setTimeout(() => {
+            loading.style.display = 'none';
+            mainContent.classList.remove('hidden');
+            mainContent.classList.add('show');
+          }, 300);
+        }, 1000);
+      }
+
+      // Inisialisasi
+      fetchMessages();
+      setupMessageCarousel();
     });
   </script>
 
 
 </body>
 
+<body class="bg-white text-gray-800 font-serif relative overflow-x-hidden selection-div">
+  <!-- Your existing body content -->
+  <!-- ... -->
 
-<!-- Footer Wedding Style (Tailwind CSS) -->
-<footer class="bg-[#1a1a1a] text-white pt-16 relative">
-  <!-- Middle Floating Box -->
-  <!-- Middle Floating Box with Form & Quote -->
-  <div
-    class="absolute left-1/2 transform -translate-x-1/2 -top-20 bg-[#111] px-6 py-8 w-[90%] max-w-xl shadow-lg text-center rounded-t-3xl rounded-b-xl">
-    <h3 class="text-2xl font-semibold font-cursive text-white mb-2">Al Ghifari & Yusfina</h3>
-    <p class="text-sm text-gray-300 mb-4">وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا
-      لِّتَسْكُنُوْٓا اِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَّرَحْمَةًۗ</p>
+  <!-- Footer Section -->
+  <footer class="bg-[#1a1a1a] text-white pt-32 pb-12 relative">
+    <!-- Floating Form Box -->
+    <div class="absolute left-1/2 transform -translate-x-1/2 -top-20 bg-[#111] px-6 py-8 w-[90%] max-w-xl shadow-lg text-center rounded-t-3xl rounded-b-xl z-20">
+      <p class="text-sm text-gray-300 mb-3">وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا لِّتَسْكُنُوْٓا اِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَّرَحْمَةًۗ</p>
 
-    <!-- Guest Registration Form -->
-    <!-- Guest Registration Form -->
-    <h4 class="text-lg font-bold font-cursive text-[#f3d47c] mb-4">Ucapan & Do'a Untuk Pengantin</h4>
-    <form id="guestForm" class="space-y-3">
-      <input type="text" id="name" placeholder="Nama" required
-        class="w-full p-2 rounded bg-[#222] text-white placeholder-gray-400">
-      <input type="text" id="address" placeholder="Alamat" required
-        class="w-full p-2 rounded bg-[#222] text-white placeholder-gray-400">
-      <textarea id="message" placeholder="Pesan & Do'a untuk Pengantin" required
-        class="w-full p-2 rounded bg-[#222] text-white placeholder-gray-400"></textarea>
-      <button type="submit" class="bg-[#f3d47c] text-black px-4 py-2 rounded hover:bg-yellow-400 w-full">Kirim</button>
-    </form>
-
-    <!-- Quote Box Moved Here -->
-    <div id="quote-box" class="mt-4 min-h-[60px] text-sm text-gray-300 italic transition-opacity duration-500">
-      "Dan di antara tanda-tanda (kebesaran)-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari (jenis) dirimu
-      sendiri agar kamu merasa tenteram kepadanya. Dia menjadikan di antara kamu rasa kasih dan sayang. Sungguh, pada
-      yang demikian itu benar-benar terdapat tanda-tanda (kebesaran Allah) bagi kaum yang berpikir." Surah Ar-Rum
-      (30:21)
-    </div>
-  </div>
-  <!-- Auto-rotate Quotes -->
-  <script>
-    const quotes = [
-      "\"Rasulullah ﷺ bersabda:\n" + "Wanita dinikahi karena empat hal: karena hartanya, karena keturunannya, karena kecantikannya, dan karena agamanya. Maka pilihlah wanita yang beragama, niscaya engkau akan beruntung. Hadist Sahih Bukhari No. 5066\"",
-      "\"...Dan bertakwalah kepada Allah yang dengan (mempergunakan) nama-Nya kamu saling meminta satu sama lain, dan (peliharalah) hubungan silaturahmi. Sesungguhnya Allah selalu menjaga dan mengawasi kamu.\n" + "QS An-Nisa (4:1)\"",
-      "\"Nabi Muhammad ﷺ bersabda:\n" + "Nikah itu adalah sunnahku. Barang siapa yang tidak menyukai sunnahku, maka dia bukan golonganku... Hadis dari Sahih Bukhari No. 4776\""
-    ];
-
-    let currentQuote = 0;
-    const quoteBox = document.getElementById('quote-box');
-
-    setInterval(() => {
-      quoteBox.style.opacity = 0;
-      setTimeout(() => {
-        currentQuote = (currentQuote + 1) % quotes.length;
-        quoteBox.textContent = quotes[currentQuote];
-        quoteBox.style.opacity = 1;
-      }, 500);
-    }, 3000);
-  </script>
-
-
-
-  <!-- Main Footer Content -->
-  <!-- Main Footer Content Responsive -->
-
-  <!-- Add to your CSS -->
-<style>
-  /* Message Carousel Styles */
-  .message-carousel-container {
-    position: relative;
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  
-  .message-carousel {
-    display: flex;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    gap: 1.5rem;
-    padding: 1rem 0;
-    margin: 0 2rem;
-  }
-  
-  .message-carousel::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .message-card {
-    flex: 0 0 85%;
-    scroll-snap-align: start;
-    background: rgba(40, 40, 40, 0.8);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-    border: 1px solid rgba(243, 212, 124, 0.2);
-  }
-  
-  @media (min-width: 768px) {
-    .message-card {
-      flex: 0 0 42%;
-    }
-  }
-  
-  .carousel-nav {
-    background: rgba(243, 212, 124, 0.1);
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #f3d47c;
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-  }
-  
-  .carousel-nav:hover {
-    background: rgba(243, 212, 124, 0.3);
-    color: white;
-  }
-  
-  .carousel-nav.prev {
-    left: 0;
-  }
-  
-  .carousel-nav.next {
-    right: 0;
-  }
-  
-  /* Mobile Navigation */
-  .mobile-nav {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin-top: 1rem;
-  }
-  
-  @media (min-width: 768px) {
-    .mobile-nav {
-      display: none;
-    }
-  }
-</style>
-
-<!-- Footer Section -->
-<footer class="bg-[#1a1a1a] text-white pt-32 pb-12 relative">
-  <!-- Floating Form Box -->
-  <div class="absolute left-1/2 transform -translate-x-1/2 -top-20 bg-[#111] px-6 py-8 w-[90%] max-w-xl shadow-lg text-center rounded-t-3xl rounded-b-xl z-20">
-    <h3 class="text-2xl font-semibold font-cursive text-white mb-2">Al Ghifari & Yusfina</h3>
-    <p class="text-sm text-gray-300 mb-4">وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا لِّتَسْكُنُوْٓا اِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَّرَحْمَةًۗ</p>
-
-    <!-- Guest Form -->
-    <h4 class="text-lg font-bold font-cursive text-[#f3d47c] mb-1">Ucapan & Do'a</h4>
-    <form id="guestForm" class="space-y-3">
-      <input type="text" id="name" name="name" placeholder="Nama" required
-        class="w-full p-3 rounded-lg bg-[#222] text-white placeholder-gray-400 border border-[#333] focus:border-[#f3d47c] focus:ring-1 focus:ring-[#f3d47c] transition">
-      <input type="text" id="address" name="address" placeholder="Alamat" required
-        class="w-full p-3 rounded-lg bg-[#222] text-white placeholder-gray-400 border border-[#333] focus:border-[#f3d47c] focus:ring-1 focus:ring-[#f3d47c] transition">
-      <textarea id="message" name="message" placeholder="Tulis pesan & doa" required rows="3"
-        class="w-full p-3 rounded-lg bg-[#222] text-white placeholder-gray-400 border border-[#333] focus:border-[#f3d47c] focus:ring-1 focus:ring-[#f3d47c] transition"></textarea>
-      <button type="submit" 
-        class="bg-[#f3d47c] hover:bg-[#e6c76e] text-black font-medium py-2 px-4 rounded-lg transition w-full flex items-center justify-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd" />
-        </svg>
-        Kirim Pesan
-      </button>
-    </form>
-  </div>
-
-  <!-- Main Footer Content -->
-  <div class="container mx-auto px-4 pt-40">
-    <!-- Message Carousel -->
-    <div class="message-carousel-container mb-12 mt-90">
-      <h3 class="text-xl font-cursive text-[#f3d47c] mb-6 text-center">Ucapan Tamu</h3>
-      
-      <div class="relative">
-        <button id="scrollLeft" class="carousel-nav prev hidden md:flex">‹</button>
-        
-        <div id="messageCarousel" class="message-carousel">
-          <!-- Messages will load here -->
-          <div class="text-gray-300 text-center py-12 italic">Memuat pesan...</div>
-        </div>
-        
-        <button id="scrollRight" class="carousel-nav next hidden md:flex">›</button>
-      </div>
-      
-      <div class="mobile-nav">
-        <button id="scrollLeftMobile" class="carousel-nav">‹</button>
-        <button id="scrollRightMobile" class="carousel-nav">›</button>
-      </div>
+      <!-- Guest Form -->
+      <h4 class="text-lg font-bold font-cursive text-[#f3d47c] mb-1">Ucapan & Do'a</h4>
+      <form id="guestForm" class="space-y-3">
+        <input type="text" id="name" name="name" placeholder="Nama" required
+          class="w-full p-3 rounded-lg bg-[#222] text-white placeholder-gray-400 border border-[#333] focus:border-[#f3d47c] focus:ring-1 focus:ring-[#f3d47c] transition">
+        <input type="text" id="address" name="address" placeholder="Alamat" required
+          class="w-full p-3 rounded-lg bg-[#222] text-white placeholder-gray-400 border border-[#333] focus:border-[#f3d47c] focus:ring-1 focus:ring-[#f3d47c] transition">
+        <textarea id="message" name="message" placeholder="Tulis pesan & doa" required rows="3"
+          class="w-full p-3 rounded-lg bg-[#222] text-white placeholder-gray-400 border border-[#333] focus:border-[#f3d47c] focus:ring-1 focus:ring-[#f3d47c] transition"></textarea>
+        <button type="submit"
+          class="bg-[#f3d47c] hover:bg-[#e6c76e] text-black font-medium py-2 px-4 rounded-lg transition w-full flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z"
+              clip-rule="evenodd" />
+          </svg>
+          Kirim Pesan
+        </button>
+      </form>
     </div>
 
-    <!-- Footer Columns -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-      <!-- Column 1 -->
-      <div class="text-center md:text-left">
-        <h4 class="text-lg font-cursive text-[#f3d47c] mb-3">Jasa Pembuatan Website</h4>
-        <ul class="space-y-2">
-          <li><a href="#" class="text-gray-300 hover:text-[#f3d47c] transition">Undangan Digital</a></li>
-          <li><a href="#" class="text-gray-300 hover:text-[#f3d47c] transition">Website Bisnis</a></li>
-          <li><a href="#" class="text-gray-300 hover:text-[#f3d47c] transition">Toko Online</a></li>
-        </ul>
-      </div>
-      
-      <!-- Column 2 -->
-     
-      <!-- Column 3 -->
-      <div class="text-center md:text-right">
-        <h4 class="text-lg font-cursive text-[#f3d47c] mb-3">Kontak Kami</h4>
-        <ul class="space-y-2">
-          <li class="text-gray-300">Instagram: @alhanief.creative</li>
-          <li class="text-gray-300">WhatsApp: +62 851-3458-0660</li>
-          <li><a href="mailto:alhanief27@gmail.com" class="text-[#f3d47c] hover:underline">Email Kami</a></li>
-        </ul>
-      </div>
-    </div>
-  </div>
+    <!-- Main Footer Content -->
+    <div class="container mx-auto px-4 pt-40">
+      <!-- Message Carousel -->
+      <div class="message-carousel-container mb-12 mt-90">
+        <h3 class="text-xl font-cursive text-[#f3d47c] mb-6 text-center">Ucapan Tamu</h3>
 
-  <!-- Social Media & Copyright -->
-  <div class="mt-12 pt-6 border-t border-[#333]">
-    <div class="flex justify-center space-x-6 mb-6">
-      <a href="#" class="text-gray-400 hover:text-[#f3d47c] transition">
-        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd"></path>
-        </svg>
-      </a>
-      <a href="#" class="text-gray-400 hover:text-[#f3d47c] transition">
-        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path fill-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clip-rule="evenodd"></path>
-        </svg>
-      </a>
-      <a href="#" class="text-gray-400 hover:text-[#f3d47c] transition">
-        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"></path>
-        </svg>
-      </a>
-    </div>
-    
-    <div class="text-center text-xs text-gray-500">
-      © 2025 Design by <a href="https://instagram.com/alhanief.creative" target="_blank" class="text-[#f3d47c] hover:underline">alhanief.creative</a>. All rights reserved.
-    </div>
-  </div>
-</footer>
+        <div class="message-container relative flex items-center">
+          <button id="scrollLeft" class="carousel-nav left-0 hidden md:block">‹</button>
 
-<!-- JavaScript for Message Carousel -->
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const scriptURL = "https://script.google.com/macros/s/AKfycbwX9qu2fY7LQXg0brHcRTmsPa6s2lVSphkjFzGjSJ0WhDw7OdnvIPgLYvkZYRjfgxhX/exec";
-    const carousel = document.getElementById('messageCarousel');
-    const scrollLeft = document.getElementById('scrollLeft');
-    const scrollRight = document.getElementById('scrollRight');
-    const scrollLeftMobile = document.getElementById('scrollLeftMobile');
-    const scrollRightMobile = document.getElementById('scrollRightMobile');
-
-    let messages = [];
-    let autoScrollInterval;
-    let isScrolling = false;
-
-    // Fetch messages from Google Sheets
-    function fetchMessages() {
-      fetch(scriptURL)
-        .then(res => res.json())
-        .then(data => {
-          messages = Array.isArray(data) ? data : (data.data || []);
-          renderMessages();
-          if (messages.length > 1) {
-            startAutoScroll();
-          }
-        })
-        .catch(err => {
-          console.error("Error loading messages:", err);
-          carousel.innerHTML = `
-            <div class="text-center py-8 w-full">
-              <p class="text-red-400">Gagal memuat pesan tamu</p>
-              <button onclick="fetchMessages()" class="mt-2 text-[#f3d47c] text-sm underline">
-                Coba Lagi
-              </button>
-            </div>
-          `;
-        });
-    }
-
-    // Render messages to carousel
-    function renderMessages() {
-      if (messages.length === 0) {
-        carousel.innerHTML = `
-          <div class="text-center py-8 w-full">
-            <p class="text-gray-400 italic">Belum ada ucapan tamu</p>
+          <div id="messageList" class="message-carousel flex-1">
+            <!-- Pesan akan dimuat di sini secara dinamis -->
           </div>
-        `;
+
+          <button id="scrollRight" class="carousel-nav right-0 hidden md:block">›</button>
+        </div>
+
+        <!-- <div class="mobile-nav flex justify-center gap-4 mt-4 md:hidden">
+          <button id="scrollLeftMobile" class="carousel-nav-mobile">‹</button>
+          <button id="scrollRightMobile" class="carousel-nav-mobile">›</button>
+        </div>
+      </div> -->
+
+      <!-- Footer Columns -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <!-- Column 1 -->
+        <div class="text-center md:text-left">
+          <h4 class="text-lg font-cursive text-[#f3d47c] mb-3">Jasa Pembuatan Website</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-300 hover:text-[#f3d47c] transition">Undangan Digital</a></li>
+            <li><a href="#" class="text-gray-300 hover:text-[#f3d47c] transition">Website Bisnis</a></li>
+            <li><a href="#" class="text-gray-300 hover:text-[#f3d47c] transition">Toko Online</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3 -->
+        <div class="text-center md:text-right">
+          <h4 class="text-lg font-cursive text-[#f3d47c] mb-3">Kontak Kami</h4>
+          <ul class="space-y-2">
+            <li class="text-gray-300">Instagram: @alhanief.creative</li>
+            <li class="text-gray-300">WhatsApp: +62 851-3458-0660</li>
+            <li><a href="mailto:alhanief27@gmail.com" class="text-[#f3d47c] hover:underline">Email Kami</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Social Media & Copyright -->
+    <div class="mt-12 pt-6 border-t border-[#333]">
+      <div class="flex justify-center space-x-6 mb-6">
+        <a href="#" class="text-gray-400 hover:text-[#f3d47c] transition">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill-rule="evenodd"
+              d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
+              clip-rule="evenodd"></path>
+          </svg>
+        </a>
+        <a href="#" class="text-gray-400 hover:text-[#f3d47c] transition">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill-rule="evenodd"
+              d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z"
+              clip-rule="evenodd"></path>
+          </svg>
+        </a>
+        <a href="#" class="text-gray-400 hover:text-[#f3d47c] transition">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84">
+            </path>
+          </svg>
+        </a>
+      </div>
+
+      <div class="text-center text-xs text-gray-500">
+        © 2025 Design by <a href="https://instagram.com/alhanief.creative" target="_blank"
+          class="text-[#f3d47c] hover:underline">alhanief.creative</a>. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript for Message Carousel -->
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwX9qu2fY7LQXg0brHcRTmsPa6s2lVSphkjFzGjSJ0WhDw7OdnvIPgLYvkZYRjfgxhX/exec";
+
+    document.addEventListener("DOMContentLoaded", function() {
+      // Inisialisasi elemen carousel
+      const messageList = document.getElementById('messageList');
+      const scrollLeftBtn = document.getElementById('scrollLeft');
+      const scrollRightBtn = document.getElementById('scrollRight');
+      const scrollLeftMobile = document.getElementById('scrollLeftMobile');
+      const scrollRightMobile = document.getElementById('scrollRightMobile');
+      const guestForm = document.getElementById('guestForm');
+      
+      // Jika messageList tidak ditemukan, hentikan eksekusi
+      if (!messageList) {
+        console.warn("messageList element not found");
         return;
       }
 
-      carousel.innerHTML = messages.map((message, index) => {
-        const name = message.name || message[1] || "Tamu Undangan";
-        const address = message.address || message[2] || "";
-        const msg = message.message || message[3] || "";
-        const timestamp = message.timestamp || message[0] || "";
+      // Variabel untuk kontrol auto-scroll
+      let autoScrollInterval;
+      let isScrolling = false;
+      let currentMessageIndex = 0;
+      let messages = [];
 
-        return `
-          <div class="message-card" data-index="${index}">
-            <p class="font-bold text-[#f3d47c]">${name}</p>
-            <p class="text-gray-400 text-xs mb-2">${address}</p>
-            <p class="italic my-3 text-white">"${msg}"</p>
-            <p class="text-gray-500 text-xs mt-3">
-              ${timestamp ? new Date(timestamp).toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              }) : ''}
-            </p>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // Auto-scroll functionality
-    function startAutoScroll() {
-      stopAutoScroll();
-      autoScrollInterval = setInterval(() => {
-        if (isScrolling) return;
+      // Fungsi untuk update state tombol
+      function updateButtonStates() {
+        const isFirst = currentMessageIndex === 0;
+        const isLast = currentMessageIndex === messages.length - 1 || messages.length === 0;
         
-        const scrollWidth = carousel.scrollWidth;
-        const scrollLeft = carousel.scrollLeft;
-        const clientWidth = carousel.clientWidth;
-        const scrollAmount = clientWidth * 0.8;
-        
-        if (scrollLeft + clientWidth >= scrollWidth - 100) {
-          // If near end, scroll back to start
-          carousel.scrollTo({
-            left: 0,
-            behavior: 'smooth'
-          });
-        } else {
-          // Otherwise scroll right
-          carousel.scrollBy({
-            left: scrollAmount,
-            behavior: 'smooth'
-          });
-        }
-      }, 5000); // Change every 5 seconds
-    }
-
-    function stopAutoScroll() {
-      if (autoScrollInterval) {
-        clearInterval(autoScrollInterval);
+        if (scrollLeftBtn) scrollLeftBtn.disabled = isFirst;
+        if (scrollRightBtn) scrollRightBtn.disabled = isLast;
+        if (scrollLeftMobile) scrollLeftMobile.disabled = isFirst;
+        if (scrollRightMobile) scrollRightMobile.disabled = isLast;
       }
-    }
 
-    // Manual scroll controls
-    function setupScrollButtons() {
-      const scroll = (direction) => {
-        isScrolling = true;
+      // Fungsi untuk memulai auto-scroll
+      function startAutoScroll() {
         stopAutoScroll();
+        if (messages.length <= 1) return;
         
-        const scrollAmount = carousel.clientWidth * 0.8;
-        carousel.scrollBy({
-          left: scrollAmount * direction,
-          behavior: 'smooth'
-        });
-        
-        // Restart auto-scroll after pause
-        setTimeout(() => {
-          isScrolling = false;
-          startAutoScroll();
-        }, 10000);
-      };
-
-      if (scrollLeft) scrollLeft.addEventListener('click', () => scroll(-1));
-      if (scrollRight) scrollRight.addEventListener('click', () => scroll(1));
-      if (scrollLeftMobile) scrollLeftMobile.addEventListener('click', () => scroll(-1));
-      if (scrollRightMobile) scrollRightMobile.addEventListener('click', () => scroll(1));
-    }
-
-    // Pause auto-scroll on interaction
-    carousel.addEventListener('mouseenter', stopAutoScroll);
-    carousel.addEventListener('mouseleave', startAutoScroll);
-    carousel.addEventListener('touchstart', stopAutoScroll);
-    carousel.addEventListener('touchend', () => {
-      setTimeout(startAutoScroll, 5000);
-    });
-
-    // Handle form submission
-    const guestForm = document.getElementById('guestForm');
-    if (guestForm) {
-      guestForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const submitBtn = guestForm.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        
-        try {
-          submitBtn.disabled = true;
-          submitBtn.innerHTML = `
-            <svg class="animate-spin h-5 w-5 mx-auto text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          `;
+        autoScrollInterval = setInterval(() => {
+          if (isScrolling) return;
           
-          const formData = new FormData(guestForm);
-          const response = await fetch(scriptURL, {
+          currentMessageIndex = (currentMessageIndex + 1) % messages.length;
+          showCurrentMessage();
+          updateButtonStates();
+        }, 5000); // Setiap 5 detik
+      }
+
+      // Fungsi untuk menghentikan auto-scroll
+      function stopAutoScroll() {
+        if (autoScrollInterval) {
+          clearInterval(autoScrollInterval);
+        }
+      }
+
+      // Fungsi untuk menampilkan pesan saat ini
+      function showCurrentMessage() {
+        if (!messages.length) {
+          messageList.innerHTML = '<div class="message-item">Belum ada pesan</div>';
+          return;
+        }
+        
+        const msg = messages[currentMessageIndex];
+        const msgItem = document.createElement('div');
+        msgItem.className = 'message-item';
+        msgItem.textContent = `"${msg.message}" — ${msg.name}${msg.address ? ` from ${msg.address}` : ''}`;
+        
+        messageList.innerHTML = '';
+        messageList.appendChild(msgItem);
+      }
+
+      // Fungsi untuk scroll ke pesan sebelumnya
+      function scrollToPrevious() {
+        if (currentMessageIndex > 0) {
+          currentMessageIndex--;
+          showCurrentMessage();
+          updateButtonStates();
+        }
+        stopAutoScroll();
+        setTimeout(startAutoScroll, 10000);
+      }
+
+      // Fungsi untuk scroll ke pesan berikutnya
+      function scrollToNext() {
+        if (currentMessageIndex < messages.length - 1) {
+          currentMessageIndex++;
+          showCurrentMessage();
+          updateButtonStates();
+        }
+        stopAutoScroll();
+        setTimeout(startAutoScroll, 10000);
+      }
+
+      // Load pesan dari Google Sheets
+      function loadMessagesFromGoogleSheets() {
+        fetch(scriptURL)
+          .then(res => res.json())
+          .then(data => {
+            messages = data;
+            showCurrentMessage();
+            updateButtonStates();
+            
+            // Jika ada pesan, mulai auto-scroll
+            if (messages.length > 1) {
+              startAutoScroll();
+            }
+          })
+          .catch(err => {
+            console.error("Error loading messages:", err);
+            // Fallback to localStorage if Google Sheets fails
+            messages = JSON.parse(localStorage.getItem('guestMessages')) || [];
+            showCurrentMessage();
+            updateButtonStates();
+          });
+      }
+
+      // Handle form submission
+      if (guestForm) {
+        guestForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          const name = guestForm.name.value.trim();
+          const address = guestForm.address.value.trim();
+          const message = guestForm.message.value.trim();
+          const submitBtn = guestForm.querySelector('button[type="submit"]');
+
+          if (!name || !address || !message) {
+            alert("Harap isi semua kolom!");
+            return;
+          }
+
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="animate-pulse">Mengirim...</span>';
+          }
+
+          const formData = new FormData();
+          formData.append('name', name);
+          formData.append('address', address);
+          formData.append('message', message);
+
+          // Send to Google Sheets
+          fetch(scriptURL, {
             method: 'POST',
             body: formData
+          })
+          .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+          })
+          .then(data => {
+            // Also save to localStorage as fallback
+            const newMessage = { name, address, message };
+            const existingMessages = JSON.parse(localStorage.getItem('guestMessages')) || [];
+            existingMessages.push(newMessage);
+            localStorage.setItem('guestMessages', JSON.stringify(existingMessages));
+            
+            // Reload messages
+            loadMessagesFromGoogleSheets();
+            guestForm.reset();
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Gagal mengirim pesan. Silakan coba lagi.');
+          })
+          .finally(() => {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'Kirim Pesan';
+            }
           });
-          
-          if (!response.ok) throw new Error('Network error');
-          
-          // Show success message
-          const successMsg = document.createElement('div');
-          successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg animate-fade-in';
-          successMsg.innerHTML = `
-            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Pesan terkirim! Terima kasih
-          `;
-          document.body.appendChild(successMsg);
-          
-          // Remove after 3 seconds
-          setTimeout(() => {
-            successMsg.classList.add('opacity-0', 'transition-opacity', 'duration-300');
-            setTimeout(() => successMsg.remove(), 300);
-          }, 3000);
-          
-          // Reset form and refresh messages
-          guestForm.reset();
-          await fetchMessages();
-        } catch (err) {
-          console.error("Error:", err);
-          alert("Gagal mengirim pesan. Silakan coba lagi.");
-        } finally {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = originalText;
-        }
-      });
+        });
+      }
+
+      // Event listeners untuk tombol navigasi
+      if (scrollLeftBtn) scrollLeftBtn.addEventListener('click', scrollToPrevious);
+      if (scrollRightBtn) scrollRightBtn.addEventListener('click', scrollToNext);
+      if (scrollLeftMobile) scrollLeftMobile.addEventListener('click', scrollToPrevious);
+      if (scrollRightMobile) scrollRightMobile.addEventListener('click', scrollToNext);
+
+      // Event listeners untuk interaksi pengguna
+      if (messageList) {
+        messageList.addEventListener('mouseenter', stopAutoScroll);
+        messageList.addEventListener('mouseleave', startAutoScroll);
+        messageList.addEventListener('touchstart', stopAutoScroll);
+        messageList.addEventListener('touchend', () => {
+          setTimeout(startAutoScroll, 5000);
+        });
+      }
+
+      // Inisialisasi carousel
+      loadMessagesFromGoogleSheets();
+    });
+  </script>
+
+  <style>
+    .message-carousel-container {
+      max-width: 800px;
+      margin: 0 auto;
     }
-
-    // Initialize
-    fetchMessages();
-    setupScrollButtons();
-  });
-</script>
-<!-- FontAwesome for Icons -->
-
-<!-- Optional: Tailwind font plugin -->
-
-
-
+    
+    .message-container {
+      position: relative;
+    }
+    
+    .carousel-nav {
+      position: absolute;
+      background: rgba(243, 212, 124, 0.7);
+      color: #333;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.3s ease;
+    }
+    
+    .carousel-nav:hover {
+      background: #f3d47c;
+      transform: scale(1.1);
+    }
+    
+    .carousel-nav:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .carousel-nav-mobile {
+      background: rgba(243, 212, 124, 0.7);
+      color: #333;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .carousel-nav-mobile:hover {
+      background: #f3d47c;
+    }
+    
+    .carousel-nav-mobile:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    
+    .message-carousel {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .message-carousel::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .message-item {
+      width: 100%;
+      padding: 1rem;
+      text-align: center;
+      white-space: normal;
+      flex-shrink: 0;
+      color: #fff;
+      font-style: italic;
+    }
+  </style>
+</body>
+</html>
 
 
 </html>
@@ -1126,7 +1130,3 @@
 <!-- FontAwesome for Icons -->
 
 <!-- Optional: Tailwind font plugin -->
-
-
-
-</html>
