@@ -1,4 +1,4 @@
-<!-- 2 -->
+<!-- 22 -->
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 
@@ -376,11 +376,24 @@
       const scrollY = window.scrollY;
       const sectionTop = bg.closest('section').offsetTop;
       const offset = scrollY - sectionTop;
-      if (offset >= 0 && offset <= 400) {
-        bg.style.transform = `translateY(${offset * 0.3}px)`;
+      if (offset <= 0 && offset <= 400) {
+        bg.style.transform = `translateY(${offset * 0.4}px)`;
       }
     });
   }
+  if (isIOS) {
+    const bg = document.getElementById('countdown-bg');
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const sectionTop = bg.closest('section').offsetTop;
+      const offset = scrollY - sectionTop;
+      if (offset >= 0 && offset <= 400) {
+        bg.style.transform = `translateY(${offset * 0.4}px)`;
+      }
+    });
+  }
+  
+  
 </script>
 
 <style>
