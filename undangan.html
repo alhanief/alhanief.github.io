@@ -278,7 +278,7 @@
           <img src="img/Algy.png" alt="Bride" class="object-cover w-full h-full">
         </div>
         <h2 class="text-2xl font-semibold mb-2">Abu Dzar Al Ghifari</h2>
-        <p class="text-sm text-gray-600 mb-5.">KP gombela rt02 rw05 Tinjomoyo, Banyumanik, Semarang</p>
+        <p class="text-sm text-gray-600 mb-auto">KP gombela rt02 rw05 Tinjomoyo, Banyumanik, Semarang</p>
         <div class="flex justify-center space-x-4 text-gray-500 text-lg">
           <a href="#">🌐</a>
           <a href="#">📘</a>
@@ -301,7 +301,7 @@
           <img src="img/Yusfina.png" alt="Groom" class="object-cover w-full h-full">
         </div>
         <h2 class="text-2xl font-semibold mb-2">Yusfina Wiyrwa Saru</h2>
-        <p class="text-sm text-gray-600 mb-4">Jl Amarta Raya rt02 Rw02 Pulosari, Sroyo, jaten, Karanganyar</p>
+        <p class="text-sm text-gray-600 mb-auto">Jl Amarta Raya rt02 Rw02 Pulosari, Sroyo, jaten, Karanganyar </p>
         <div class="flex justify-center space-x-4 text-gray-500 text-lg">
           <a href="#">🌐</a>
           <a href="#">📘</a>
@@ -316,27 +316,16 @@
 
 
 
-  <!-- Countdown Section - Fixed for all devices -->
+  <!-- Countdown Section with iOS Compatible Parallax -->
 <section class="relative h-[400px] overflow-hidden">
-  <!-- Background image with optimized positioning -->
-<div class="absolute top-0 left-0 w-full h-full z-0 bg-cover bg-center bg-no-repeat" 
-     style="background-image: url('img/bg2.JPG')">
-
-
-<div class="absolute top-0 left-0 w-full h-full z-0 bg-center bg-no-repeat countdown-bg" 
-     style="background-image: url('img/bg2.jpg')">
+  <!-- Background with iOS fallback -->
+  <div id="countdown-bg" class="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat bg-fixed" 
+       style="background-image: url('img/bg2.JPG')">
+    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
   </div>
-  <style>
-  .countdown-bg {
-    background-size: cover;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-  }
-</style>
 
-  <!-- Overlay + Content -->
-  <div class="relative z-10 h-full flex items-center justify-center bg-black bg-opacity-50">
+  <!-- Content -->
+  <div class="relative z-10 h-full flex items-center justify-center">
     <div class="text-center text-white px-4">
       <h3 class="text-2xl font-semibold mb-2">SAVE THE DATE</h3>
       <p class="text-lg mb-6">22 JUNI 2025</p>
@@ -362,56 +351,44 @@
   </div>
 </section>
 
-<style>
-  /* iOS-specific fixes */
-  @supports (-webkit-touch-callout: none) {
-    .bg-fixed {
-      background-attachment: scroll !important;
-      position: absolute;
+<script>
+  // Countdown Timer (unchanged)
+  const targetDate = new Date('2025-06-22T09:00:00+07:00');
+  
+  function updateCountdown() {
+    const now = new Date();
+    let diff = targetDate - now;
+    if (diff < 0) diff = 0;
+
+    document.getElementById('countdown-days').textContent = Math.floor(diff / (1000 * 60 * 60 * 24));
+    document.getElementById('countdown-hours').textContent = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    document.getElementById('countdown-minutes').textContent = Math.floor((diff / (1000 * 60)) % 60);
+    document.getElementById('countdown-seconds').textContent = Math.floor((diff / 1000) % 60);
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+  // iOS Background Fix (improved)
+  if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+    const bg = document.getElementById('countdown-bg');
+    if (bg) {
+      bg.classList.remove('bg-fixed');
+      bg.style.position = 'absolute';
+      bg.style.height = '100%';
     }
-    .relative.h-\[400px\] {
-      overflow: hidden;
+  }
+</script>
+
+<style>
+  /* iOS-specific fixes - only affects countdown section */
+  @supports (-webkit-touch-callout: none) {
+    #countdown-bg {
+      position: absolute !important;
+      background-attachment: scroll !important;
     }
   }
 </style>
-<script>
-    // Set the target date and time (22 June 2025, 09:00 WIB/GMT+7 for Indonesia)
-    const targetDate = new Date('2025-06-22T09:00:00+07:00');
-
-    function updateCountdown() {
-      const now = new Date();
-      let diff = targetDate - now;
-
-      if (diff < 0) diff = 0;
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
-
-      // Update countdown elements directly by ID
-      document.getElementById('countdown-days').textContent = days;
-      document.getElementById('countdown-hours').textContent = hours;
-      document.getElementById('countdown-minutes').textContent = minutes;
-      document.getElementById('countdown-seconds').textContent = seconds;
-    }
-
-    // Initialize countdown immediately
-    updateCountdown();
-
-    // Then update every second
-    setInterval(updateCountdown, 1000);
-
-    // iOS detection and fix for background
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-    if (isIOS) {
-      document.querySelector('.relative.h-[400px] .absolute.bg-cover').style.position = 'absolute';
-      document.querySelector('.relative.h-[400px]').style.overflow = 'hidden';
-      document.querySelector('.relative.h-[400px]').style.height = '400px';
-    }
-  </script>
 
   <!-- Organization Timeline -->
   <!-- Full Background Video Section -->
