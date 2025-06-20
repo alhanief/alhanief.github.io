@@ -316,40 +316,56 @@
 
 
 
-  <!-- Countdown Section with Parallax Background -->
-  <section class="relative h-[400px] overflow-hidden">
-    <!-- Background image with parallax effect -->
-    <div class="parallax-bg absolute top-0 left-0 w-full h-full z-0" style="background-image: url('img/bg2.JPG');">
-    </div>
+  <!-- Countdown Section - Fixed for all devices -->
+<section class="relative h-[400px] overflow-hidden">
+  <!-- Background image with optimized positioning -->
+  <div class="absolute top-0 left-0 w-full h-full z-0 bg-cover bg-center bg-no-repeat bg-fixed" 
+       style="background-image: url('img/bg2.JPG'); 
+              -webkit-background-size: cover;
+              -moz-background-size: cover;
+              -o-background-size: cover;">
+  </div>
 
-    <!-- Overlay + Content -->
-    <div class="relative z-10 h-full flex items-center justify-center bg-black bg-opacity-50">
-      <div class="text-center text-white">
-        <h3 class="text-2xl font-semibold mb-2">SAVE THE DATE</h3>
-        <p class="text-lg mb-6">22 JUNI 2025</p>
-        <div class="grid grid-cols-4 gap-6 text-lg font-semibold">
-          <div>
-            <span class="block text-3xl">359</span>
-            <span>Days</span>
-          </div>
-          <div>
-            <span class="block text-3xl">23</span>
-            <span>Hours</span>
-          </div>
-          <div>
-            <span class="block text-3xl">59</span>
-            <span>Minutes</span>
-          </div>
-          <div>
-            <span class="block text-3xl">48</span>
-            <span>Seconds</span>
-          </div>
+  <!-- Overlay + Content -->
+  <div class="relative z-10 h-full flex items-center justify-center bg-black bg-opacity-50">
+    <div class="text-center text-white px-4">
+      <h3 class="text-2xl font-semibold mb-2">SAVE THE DATE</h3>
+      <p class="text-lg mb-6">22 JUNI 2025</p>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-lg font-semibold">
+        <div>
+          <span id="countdown-days" class="block text-3xl md:text-4xl">359</span>
+          <span>Days</span>
+        </div>
+        <div>
+          <span id="countdown-hours" class="block text-3xl md:text-4xl">23</span>
+          <span>Hours</span>
+        </div>
+        <div>
+          <span id="countdown-minutes" class="block text-3xl md:text-4xl">59</span>
+          <span>Minutes</span>
+        </div>
+        <div>
+          <span id="countdown-seconds" class="block text-3xl md:text-4xl">48</span>
+          <span>Seconds</span>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <script>
+<style>
+  /* iOS-specific fixes */
+  @supports (-webkit-touch-callout: none) {
+    .bg-fixed {
+      background-attachment: scroll !important;
+      position: absolute;
+    }
+    .relative.h-\[400px\] {
+      overflow: hidden;
+    }
+  }
+</style>
+<script>
     // Set the target date and time (22 June 2025, 09:00 WIB/GMT+7 for Indonesia)
     const targetDate = new Date('2025-06-22T09:00:00+07:00');
 
